@@ -21,16 +21,16 @@ last updated 2018/03/15
 	probably logic settings for A23:A16 when reading ROM (see SRAM settings below)
 	(seems to affect part of 0015 also?)
 LoROM 4M = 05 2a 0x (x0-x7:8000-ffff, x8-xf:8000-ffff)
-	  8M = 15 28 0x (x0-xf:8000-ffff)
+      8M = 15 28 0x (x0-xf:8000-ffff)
  10..16M = 55 20 0x (00-1f:8000-ffff, 20-3f, 80-9f,...)
  24..32M = 55 00 4x (00-3f:8000-ffff, 80-bf...)
 HiROM 4M = 09 00 0x (40-43:0000-ffff, c0-c3, c4-c7...)
-	  8M = 25 00 0x (40-47:0000-ffff, c0-c7, c8-cf...)
-	 10M = 37 00 0x
-	 12M = 3d 00 0x
-	 16M = 95 00 0x (40-4f:0000-ffff, c0-cf...)
-	 24M = f5 00 0x
-	 32M = 55 00 8x (40-5f:0000-ffff, c0-df...)
+      8M = 25 00 0x (40-47:0000-ffff, c0-c7, c8-cf...)
+     10M = 37 00 0x
+     12M = 3d 00 0x
+     16M = 95 00 0x (40-4f:0000-ffff, c0-cf...)
+     24M = f5 00 0x
+     32M = 55 00 8x (40-5f:0000-ffff, c0-df...)
 
 0015 1 byte  SRAM A15
 	00 = 0 (HiROM)  (xx:6000-7fff)
