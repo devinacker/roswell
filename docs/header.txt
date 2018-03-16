@@ -1,0 +1,58 @@
+Super UFO copier header format
+by Revenant
+
+last updated 2018/03/15
+
+0000 1 byte  ROM size in megabits (4, 8, 10, 12, 16, 24, 32)
+0001 1 byte  unused
+0002 1 byte  ROM mapping (1 = lorom, 0 = hirom)
+0003 5 bytes unused
+0008 8 bytes "SFCUFOSD"
+
+0010 2 bytes SRAM size in bytes
+0012 1 byte  SRAM present
+	00 = none
+	01 = 16kbit
+	02 = 64kbit
+	03 = 256kbit
+	07 = 1Mbit
+
+0013 2 bytes ROM mapping
+	probably logic settings for A23:A16 when reading ROM (see SRAM settings below)
+	(seems to affect part of 0015 also?)
+LoROM 4M = 05 2a 0x (x0-x7:8000-ffff, x8-xf:8000-ffff)
+	  8M = 15 28 0x (x0-xf:8000-ffff)
+ 10..16M = 55 20 0x (00-1f:8000-ffff, 20-3f, 80-9f,...)
+ 24..32M = 55 00 4x (00-3f:8000-ffff, 80-bf...)
+HiROM 4M = 09 00 0x (40-43:0000-ffff, c0-c3, c4-c7...)
+	  8M = 25 00 0x (40-47:0000-ffff, c0-c7, c8-cf...)
+	 10M = 37 00 0x
+	 12M = 3d 00 0x
+	 16M = 95 00 0x (40-4f:0000-ffff, c0-cf...)
+	 24M = f5 00 0x
+	 32M = 55 00 8x (40-5f:0000-ffff, c0-df...)
+
+0015 1 byte  SRAM A15
+	00 = 0 (HiROM)  (xx:6000-7fff)
+	10 = don't care (xx:0000-ffff)
+	20 = 0 (LoROM)  (xx:0000-7fff) i.e. if more than 32kb SRAM
+	30 = 1          (xx:8000-ffff)
+	possibly ORed with either of...
+	40 = 24-32Mbit LoROM
+	80 = 32Mbit HiROM
+	
+0016 1 byte  SRAM A23:20 (2 bits each, A23 most significant)
+	00b = don't care
+	01b = 1 (not used by firmware)
+	10b = 0
+	11b = 1
+	
+	default for LoROM : 7x, fx (x111xxxxb = 00111111b = 3f)
+	default for HiROM : 2x-3x, ax-bx (x01xxxxxb = 00101100b = 2c)
+
+0017 1 byte  ROM mapping (same as 0002)
+0018 1 byte  region (00 = NTSC, 02 = PAL)
+0019 1 byte  expansion chip (00 = no, FF = yes)
+001A 6 bytes unused
+
+0020 32 bytes copy of cartridge header (00FFC0-00FFDF)

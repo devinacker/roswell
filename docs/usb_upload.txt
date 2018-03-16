@@ -1,0 +1,33 @@
+Super UFO USB upload protocol
+by Revenant
+
+last updated 2018/03/15
+
+Rather simple, but requires generating a valid and correct copier header for the
+ROM being uploaded (see header.txt for details). Otherwise, the ROM may be
+rejected or simply not work correctly after loading.
+
+Note that as far as I'm aware, only ROMs that the Super UFO normally supports
+can be transferred (otherwise they'd just be unplayable). Just about any
+"normal" LoROM or HiROM game up to 32 megabits (4MB) should be okay as long as
+the header is correct.
+
+ROMs that aren't one of the supported sizes (4, 8, 10, 12, 16, 24, or 32 Mbit)
+should be padded or mirrored (preferably the latter) before uploading.
+
+The USB device has a vendor ID of 0x1292 and a product ID of 0x4653 and uses
+bulk transfers to upload ROMs. (There are actually bulk transfer endpoints in
+both directions, but the Super UFO firmware only ever uses it in one direction.)
+
+Select the "USB" option on the Super UFO main menu, which will enable the USB port.
+After then opening the outgoing bulk endpoint from the other side, send the 
+following:
+
+- an empty string
+- 64 bytes of header data (see header.txt)
+- 1024 bytes of ROM data, repeat until finished
+- an empty string again
+
+If the header data is correct and all goes well then the ROM should now be in DRAM
+and ready to play. Select the "check" option and then select "game check" from the
+submenu to verify that all the details about the ROM are correct.
