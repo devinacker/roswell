@@ -243,11 +243,12 @@ def write_rom(path):
 		cursize = 0
 		while cursize < totalsize:
 			print("written %u bytes" % cursize, end='\r')
-			cursize += ep_out.write(data[cursize:cursize+1024])
+			cursize += ep_out.write(data[cursize:cursize+32768])
 			
 		# end with another empty string
 		ep_out.write("")
-		print("\nfinished writing successfully in %.2f sec" % (time.clock() - start))
+		print("written %u bytes" % cursize)
+		print("finished writing successfully in %.2f sec" % (time.clock() - start))
 
 	except usb.core.USBError as e:
 		print("\n")

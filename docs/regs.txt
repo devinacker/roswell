@@ -1,0 +1,44 @@
+Super UFO hardware registers
+by Revenant
+
+last updated 2018/03/21
+
+The Super UFO uses the WinChipHead CH376 chip for USB communication.
+(See the PDF datasheets in this directory for details)
+
+$49 - low 4 bits of $2188 on boot (repeated in both nibbles)
+(maybe? seems to always be #$55)
+$89 - result of GET_IC_VER command to CH376 chip
+both of the above form the "SUPERUFO" value on the "system check" screen
+
+$b0 - USB connected ($00 = yes)
+$b1 - SD card inserted
+$b2 - ??
+
+$2188 - USB/SD card status
+R: bit 0 (#$01) = no SD card ($00b1 <- #$ff)
+   bit 1 (#$02) = ? ($00b2 <- #$ff)
+   bit 2 (#$04) = USB cable connected ($00b0 <- #$00)
+
+$2189 - ???
+
+$218a - bank $00-7d memory select
+W: #$x0  = BIOS at banks $00-7d
+   #$xA  = BIOS at banks $00-7d (flash mem. write enable?)
+   other = DRAM at banks $00-7d
+   write to $218b first to enable
+
+$218b - bank $00-7d memory select enable
+W: #$xA = enable writes to $218a (otherwise they do nothing)
+
+$218c - CH376 data port
+R/W: input to or output from USB/SD card commands
+     (see datasheets for details)
+
+$218d - ???
+
+$218e - CH376 command port
+R: bit 7 (#$80) = interrupt flag
+W: USB/SD card command (see datasheets for details)
+
+$218f - ???

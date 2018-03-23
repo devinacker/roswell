@@ -1,7 +1,7 @@
 Super UFO USB upload protocol
 by Revenant
 
-last updated 2018/03/15
+last updated 2018/03/21
 
 Rather simple, but requires generating a valid and correct copier header for the
 ROM being uploaded (see header.txt for details). Otherwise, the ROM may be
@@ -25,7 +25,7 @@ following:
 
 - an empty string
 - 64 bytes of header data (see header.txt)
-- 1024 bytes of ROM data, repeat until finished
+- 1024 bytes (or more) of ROM data, repeat until finished
 - an empty string again
 
 If the header data is correct and all goes well then the ROM should now be in DRAM
