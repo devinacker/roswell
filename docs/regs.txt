@@ -42,10 +42,10 @@ W: nothing
 if BIOS/DRAM select enabled:
 W: #$x0  = BIOS at banks $00-7d
            DRAM (read/write) at banks $80-ff
-		   USB/SD registers enabled
+           USB/SD registers enabled
    #$xA  = BIOS at banks $00-7d
            DRAM (read/write) at banks $80-ff
-		   USB/SD registers disabled
+           USB/SD registers disabled
    other = DRAM (read only) at banks $00-7d and $80-ff
            USB/SD registers disabled
    write to $218b first to enable
