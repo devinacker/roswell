@@ -1,7 +1,7 @@
 Super UFO hardware registers
 by Revenant
 
-last updated 2018/03/21
+last updated 2018/03/24
 
 The Super UFO uses the WinChipHead CH376 chip for USB communication.
 (See the PDF datasheets in this directory for details)
@@ -16,29 +16,62 @@ $b1 - SD card inserted
 $b2 - ??
 
 $2188 - USB/SD card status
+==========================
+if USB/SD registers not enabled ($218a):
+R: open bus
+
+if USB/SD registers enabled:
 R: bit 0 (#$01) = no SD card ($00b1 <- #$ff)
-   bit 1 (#$02) = ? ($00b2 <- #$ff)
+   bit 1 (#$02) = ? (SD card related) ($00b2 <- #$ff)
    bit 2 (#$04) = USB cable connected ($00b0 <- #$00)
+   bit 3 (#$08) = ?
+   bits 4-7 = open bus
 
 $2189 - ???
+===========
+R: open bus (except when... ???)
+W: ???
 
-$218a - bank $00-7d memory select
+$218a - BIOS/DRAM select
+========================
+R: open bus
+
+if BIOS/DRAM select not enabled ($218b):
+W: nothing
+
+if BIOS/DRAM select enabled:
 W: #$x0  = BIOS at banks $00-7d
-   #$xA  = BIOS at banks $00-7d (flash mem. write enable?)
-   other = DRAM at banks $00-7d
+           DRAM (read/write) at banks $80-ff
+		   USB/SD registers enabled
+   #$xA  = BIOS at banks $00-7d
+           DRAM (read/write) at banks $80-ff
+		   USB/SD registers disabled
+   other = DRAM (read only) at banks $00-7d and $80-ff
+           USB/SD registers disabled
    write to $218b first to enable
 
-$218b - bank $00-7d memory select enable
-W: #$xA = enable writes to $218a (otherwise they do nothing)
+$218b - BIOS/DRAM select enable
+===============================
+R: open bus
+W: #$xA = enable writes to $218a
 
 $218c - CH376 data port
+=======================
 R/W: input to or output from USB/SD card commands
      (see datasheets for details)
 
 $218d - ???
+===========
+R: open bus (except when... ???)
+W: ???
 
 $218e - CH376 command port
+==========================
 R: bit 7 (#$80) = interrupt flag
+   bits 6-0 = 0
 W: USB/SD card command (see datasheets for details)
 
 $218f - ???
+===========
+R: open bus (except when... ???)
+W: ???
