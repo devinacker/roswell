@@ -3,24 +3,27 @@ by Revenant
 
 last updated 2018/03/24
 
-The Super UFO uses the WinChipHead CH376 chip for USB communication.
-(See the PDF datasheets in this directory for details)
+The Super UFO uses the WinChipHead CH376 chip for USB communication and SD card
+functionality. (See the PDF datasheets in this directory for details)
 
-$49 - low 4 bits of $2188 on boot (repeated in both nibbles)
-(maybe? seems to always be #$55)
-$89 - result of GET_IC_VER command to CH376 chip
-both of the above form the "SUPERUFO" value on the "system check" screen
+The registers at $2188-218f are automatically enabled when turning on the SNES,
+but are disabled when launching a game, and are not enabled again if the reset
+button is pressed.
 
-$b0 - USB connected ($00 = yes)
-$b1 - SD card inserted
-$b2 - ??
+If the UFO registers are NOT enabled:
+ - Reading any register returns open bus
+ - Writing any register except $218a or $218b has no effect
+ - CH376 chip is powered off / USB connection is terminated
 
-$2188 - USB/SD card status
+All other values/effects mentioned below assume the registers are enabled.
+
+$2188 - hardware status
 ==========================
-if USB/SD registers not enabled ($218a):
-R: open bus
+if $218f & #$80:
+R: bits 0-3 = constant #$5 (hardware revision?)
+   bits 4-7 = open bus
 
-if USB/SD registers enabled:
+otherwise:
 R: bit 0 (#$01) = no SD card ($00b1 <- #$ff)
    bit 1 (#$02) = ? (SD card related) ($00b2 <- #$ff)
    bit 2 (#$04) = USB cable connected ($00b0 <- #$00)
@@ -29,49 +32,40 @@ R: bit 0 (#$01) = no SD card ($00b1 <- #$ff)
 
 $2189 - ???
 ===========
-R: open bus (except when... ???)
-W: ???
+W: bit 0 (#$01) = do some weird shit with the data bus
 
 $218a - BIOS/DRAM select
 ========================
-R: open bus
-
-if BIOS/DRAM select not enabled ($218b):
-W: nothing
-
-if BIOS/DRAM select enabled:
+if BIOS/DRAM select enabled ($218b):
 W: #$x0  = BIOS at banks $00-7d
            DRAM (read/write) at banks $80-ff
-           USB/SD registers enabled
+           Enable registers
    #$xA  = BIOS at banks $00-7d
            DRAM (read/write) at banks $80-ff
-           USB/SD registers disabled
+           Disable registers
    other = DRAM (read only) at banks $00-7d and $80-ff
-           USB/SD registers disabled
-   write to $218b first to enable
+           Disable registers
 
 $218b - BIOS/DRAM select enable
 ===============================
-R: open bus
 W: #$xA = enable writes to $218a
 
 $218c - CH376 data port
 =======================
 R/W: input to or output from USB/SD card commands
      (see datasheets for details)
-
+     
 $218d - ???
 ===========
-R: open bus (except when... ???)
-W: ???
 
 $218e - CH376 command port
 ==========================
 R: bit 7 (#$80) = interrupt flag
-   bits 6-0 = 0
+   bits 6-0 = same as data port
 W: USB/SD card command (see datasheets for details)
 
-$218f - ???
-===========
-R: open bus (except when... ???)
-W: ???
+$218f - hardware status control
+==================================
+W: bit 7 (#$80) =
+     0: get CH376 status in $2188
+     1: get hardware revision (or something) in $2188
