@@ -36,18 +36,18 @@ Read from the bytes at $0012 and $0015 in the UFO header.
 
 W: bit 6 (#$40) = SNES A22 -> UFO DRAM A18
      0: DRAM size is <= 16Mbit (mirrored in banks $40-7d and $c0-ff)
-	 1: DRAM size is >  16Mbit (not mirrored)
+     1: DRAM size is >  16Mbit (not mirrored)
    bits 4-5 = UFO SRAM mapping (A15:12)
      0: ??? ($6000 in LoROM banks?)
-	 1: $0000-ffff
-	 2: $0000-7fff
-	 3: $8000-ffff
+     1: $0000-ffff
+     2: $0000-7fff
+     3: $8000-ffff
    bits 0-2 = UFO SRAM size
      0:     none (open bus)
-	 1/4/5: $800 bytes (or $1000?)
-	 2/6:   $2000 bytes
-	 3:     $8000 bytes
-	 7:     $20000 bytes (split over multiple banks)
+     1/4/5: $800 bytes (or $1000?)
+     2/6:   $2000 bytes
+     3:     $8000 bytes
+     7:     $20000 bytes (split over multiple banks)
 
 $2185 - memory control 2 (UFO SRAM mapping)
 ===========================================
@@ -73,10 +73,10 @@ Read from the byte at $0013 in the UFO header.
 
 W: bit 6 (#$40) = SNES A21 -> UFO DRAM A17
      0: DRAM size is <= 8Mbit (mirrored in banks $20-3f, $60-7d, ...)
-	 1: DRAM size is >  8Mbit
+     1: DRAM size is >  8Mbit
    bit 4 (#$10) = SNES A20 -> UFO DRAM A16
      0: DRAM size is <= 4Mbit (mirrored in banks $10-1f, $30-3f, ...)
-	 1: DRAM size is >  4Mbit
+     1: DRAM size is >  4Mbit
 
 $2187 - memory control 4 (DRAM mapping)
 =======================================

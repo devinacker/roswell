@@ -1,1 +1,0 @@
-.global EnableUFO, DisableUFO
