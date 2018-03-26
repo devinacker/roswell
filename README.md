@@ -8,6 +8,7 @@ Currently available:
 
 Documentation so far:
 * `header.txt` - copier header format for ROM dumps and USB uploads
+* `regs.txt` - hardware register ($218x) info
 * `usb_upload.txt` - USB upload protocol
 
 [PyUSB](https://github.com/pyusb/pyusb) is required for any included tools that involve USB.
