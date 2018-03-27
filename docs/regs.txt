@@ -130,7 +130,7 @@ W: bit 0 (#$01) = DRAM mapping mode (0: HiROM, 1: LoROM)
 
 $2189 - game select
 ===================
-Selects what is mapped at banks that aren't mapped to the UFO firmware.
+Selects what is mapped at "game" banks as selected by $218a.
 Note that if the cartridge is enabled, writes to those addresses will still 
 also go to DRAM (if it's write-enabled by $218a).
 
@@ -138,7 +138,15 @@ SRAM and DRAM mapping are determined by $2184-87.
 Anything that isn't mapped to either of them will be mapped to the cartridge
 if it's enabled, or open bus otherwise.
 
-W: bits 0-1 = 
+W: bits 0-1 = game select
+firmware mode:
+     0/2: enable DRAM only
+     1/3: enable cartridge only
+firmware update mode:
+     0/2: enable DRAM only (always 32 Mbit, DRAM size registers ignored)
+     1:   enable SRAM only
+     3:   enable cartridge only (also map cartridge to banks $00-7d)
+game mode:
      0:   enable DRAM, SRAM, and cartridge
      1/2: enable SRAM only
      3:   enable cartridge only
@@ -146,17 +154,22 @@ W: bits 0-1 =
 $218a - firmware enable
 =======================
 if mapper enabled ($218b):
-W: #$x0  = UFO  at banks $00-7d
+W: #$x0  = firmware mode
+           UFO  at banks $00-0f
+           SRAM at banks $10-7d
            Game at banks $80-ff (DRAM writable)
            Enable other registers
            (default power-on state)
            
-   #$xA  = UFO  at banks $00-7d
+   #$xA  = firmware update mode
+           UFO  or cartridge at banks $00-0f (see $2189)
+           SRAM or cartridge at banks $10-7d
            Game at banks $80-ff (DRAM writable?)
            Disable other registers
            (set by firmware updater while reflashing)
            
-   other = Game at banks $00-7d and $80-ff
+   other = game mode
+           Game at banks $00-7d and $80-ff
            Disable other registers
            (set when booting into DRAM or cartridge)
 

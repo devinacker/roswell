@@ -1,0 +1,7 @@
+*.pyc
+*.o
+*.bp
+*.sym
+*.srm
+*/.build
+*/.build_libsfx

@@ -1,13 +1,6 @@
-#!/usr/bin/env python
 
 from __future__ import print_function
 import struct
-import usb.core, usb.util
-import sys
-import time
-
-SUPERUFO_VENDOR  = 0x1292
-SUPERUFO_PRODUCT = 0x4653
 
 valid_megabits = [4, 8, 10, 12, 16, 24, 32]
 
@@ -176,87 +169,37 @@ def get_header(data, megabits):
 	return bytes(header_ufo)
 
 # -----------------------------------------------------------------------------
-def write_rom(path):
-
-	dev = usb.core.find(idVendor=SUPERUFO_VENDOR, idProduct=SUPERUFO_PRODUCT)
-	if not dev:
-		raise ValueError("SuperUFO USB device not found")
-
-	dev.set_configuration()
-
-	# get an endpoint instance
-	cfg = dev.get_active_configuration()
-	intf = cfg[(0,0)]
-
-	ep_out = usb.util.find_descriptor(
-		intf,
-		custom_match = lambda e: \
-			usb.util.endpoint_direction(e.bEndpointAddress) == \
-			usb.util.ENDPOINT_OUT)
-	if not ep_out:
-		raise ValueError("Unable to open output endpoint")
-
-	try:
-		data = b''
-		megabits = 4
-		
-		with open(path, 'rb') as rom:
-			# get ROM data
-			data = rom.read()
-			
-		totalsize = len(data)
-		
-		if totalsize < 0x8000:
-			raise ValueError("ROM must be at least 32kb")
-		elif totalsize > 0x400000:
-			raise ValueError("ROM cannot be larger than 4Mb (32Mbit)")
-		elif totalsize % 0x8000 == 0x200:
-			# remove copier header
-			data = data[0x200:]
-			
-		# pad ROM to appropriate size
-		# (TODO: actually mirror instead)
-		for size in valid_megabits:
-			bytesize = size * 0x20000
-			if (totalsize <= bytesize):
-				megabits = size
-				data = data.ljust(bytesize, b'\x00')
-				totalsize = len(data)
-				break
-		
-		print("%u Mbit, %u bytes" % (megabits, totalsize))
-		
-		# generate a new copier header (needed for transfer) based on ROM properties
-		header = get_header(data, megabits)
+def format_rom(path):
+	data = b''
+	megabits = 4
 	
-		start = time.clock()
-	
-		# begin with empty string
-		print("starting transfer...")
-		ep_out.write("")
+	with open(path, 'rb') as rom:
+		# get ROM data
+		data = rom.read()
 		
-		# send header (64 bytes)
-		print("writing header...")
-		ep_out.write(header)
-
-		# write the data
-		cursize = 0
-		while cursize < totalsize:
-			print("written %u bytes" % cursize, end='\r')
-			cursize += ep_out.write(data[cursize:cursize+32768])
-			
-		# end with another empty string
-		ep_out.write("")
-		print("written %u bytes" % cursize)
-		print("finished writing successfully in %.2f sec" % (time.clock() - start))
-
-	except usb.core.USBError as e:
-		print("\n")
-		print(e)
-
-# -----------------------------------------------------------------------------
-if __name__ == "__main__":
-	if len(sys.argv) != 2:
-		print("Usage: loadrom.py filename")
-	else:
-		write_rom(sys.argv[1])
+	totalsize = len(data)
+	
+	if totalsize < 0x8000:
+		raise ValueError("ROM must be at least 32kb")
+	elif totalsize > 0x400000:
+		raise ValueError("ROM cannot be larger than 4Mb (32Mbit)")
+	elif totalsize % 0x8000 == 0x200:
+		# remove copier header
+		data = data[0x200:]
+		
+	# pad ROM to appropriate size
+	# (TODO: actually mirror instead)
+	for size in valid_megabits:
+		bytesize = size * 0x20000
+		if (totalsize <= bytesize):
+			megabits = size
+			data = data.ljust(bytesize, b'\x00')
+			totalsize = len(data)
+			break
+	
+	print("%u Mbit, %u bytes" % (megabits, totalsize))
+	
+	# generate a new copier header (needed for transfer) based on ROM properties
+	header = get_header(data, megabits)
+	
+	return (data, header)
