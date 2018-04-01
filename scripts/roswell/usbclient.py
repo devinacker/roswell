@@ -45,11 +45,28 @@ class USBClient(object):
 		self._usb_in  = None
 		self._usb_out = None
 	
-	def read(self, size_or_buffer, timeout=None):
+	def read(self, size_or_buffer, timeout=None, block_size=1024):
 		self.open()
-		return self._usb_in.read(size_or_buffer, timeout)
+		block_size &= ~63
+
+		if isinstance(size_or_buffer, int):
+			data = usb.core.array.array('B')
+			size = min(size_or_buffer, 0x10000)
+			# TODO: speed up SNES-side USB transactions to make this more manageable
+			while len(data) < size:
+				data += self._usb_in.read(min(block_size, size - len(data)), timeout)
+			return data
+		else:
+			# TODO :eehhh
+			return self._usb_in.read(size_or_buffer, timeout)
 	
-	def write(self, data, timeout=None):
+	def write(self, data, timeout=None, block_size=512):
 		self.open()
-		return self._usb_out.write(data, timeout)
+		block_size &= ~63
+		
+		size = 0
+		# TODO: speed up SNES-side USB transactions to make this more manageable
+		for pos in range(0, len(data), block_size):
+			size += self._usb_out.write(data[pos:pos+block_size], timeout)
+		return size
 		

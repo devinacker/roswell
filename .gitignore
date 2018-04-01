@@ -3,5 +3,8 @@
 *.bp
 *.sym
 *.srm
+*.palette
+*.tiles
+*.lz4
 */.build
 */.build_libsfx

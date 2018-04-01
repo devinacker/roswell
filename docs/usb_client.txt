@@ -1,0 +1,70 @@
+Roswell client/server protocol
+version 0.1
+
+last updated 2018/03/27
+
+This document details the protocol used for client/server communication by the
+Roswell project. 
+
+As used here, the "server" is the code running on the target device. Right now,
+that means a SNES with a Super UFO Pro 8, but it could be a similar device on
+a different console or handheld instead.
+
+In the commands below, "cartridge space" refers to the memory that is visible
+when an actual cartridge is inserted and enabled, whereas "system space" means
+anything that's there otherwise (in the SNES case, this means UFO firmware and
+DRAM enabled, more or less as it is in the menu after loading the server).
+
+Commands
+========
+
+All commands to the Roswell server have the following structure:
+(values are little-endian)
+
+offset  |name      |size     |description
+--------|----------|---------|-------------------------------------------------
+0x0      size       1 byte    size of command data (currently 0x8 bytes)
+0x1      command    1 byte    command number
+0x2      address    4 bytes   address on target device for memory operations
+  (note: most significant bytes may be ignored depending on device)
+0x6      param      2 bytes   16-bit parameter for certain commands
+0x8      ...                  optional additional data (for write commands)
+
+Command 0x00: read system info
+------------------------------
+Returns a string containing information about the server, as well as the system
+that it's running on and any available hardware.
+Address and param fields are ignored.
+
+Command 0x01: run cartridge
+---------------------------
+Run the cartridge that is currently present in the system, if one exists.
+Address and param fields are ignored.
+
+Command 0x02: restart system
+----------------------------
+Perform a warm boot into system firmware, if it exists (including firmware
+for a backup unit, if running on one). Otherwise, just restarts the server.
+Address and param fields are ignored.
+
+Command 0x03: read data from cartridge space
+Command 0x04: read data from system space
+Command 0x05: write data to cartridge space
+Command 0x06: write data to system space
+--------------------------------------------
+Read or write data at an address in either system or cartridge space.
+Param field is the size of the data in bytes (0 = 65,536 bytes).
+
+For write commands, append the data to the end of the command.
+For read commands, data can be read back after sending (may be less than the
+requested number of bytes if an error occurs).
+
+Command 0x07: jump to address in cartridge space
+Command 0x08: jump to address in system space
+------------------------------------------------
+Jump to an address in either system or cartridge space.
+Uses the target system's equivalent of a "long" or "far" jump, if applicable.
+Param field is passed via a specific register depending on the target system
+(for SNES, this is the 16-bit accumulator). 
+Destination code should make no other assumptions about system/CPU state 
+(including SNES CPU register sizes).

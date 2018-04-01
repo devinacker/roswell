@@ -1,7 +1,7 @@
 Super UFO hardware registers
 by Revenant
 
-last updated 2018/03/25
+last updated 2018/04/04
 
 The registers at $2184-218f are automatically enabled when turning on the SNES,
 but are disabled when launching a game, and are not enabled again if the reset
@@ -13,9 +13,18 @@ If the UFO registers are NOT enabled:
  - CH376 chip is powered off / USB connection is terminated
 
 All other values/effects mentioned below assume the registers are enabled.
+So, to configure the memory layout, you have to:
+- write #$0a to $218b to write-enable $218a
+- write #$00 to $218a to enable BIOS and write-enable other registers
+- write $2184-2189 to configure DRAM/SRAM/cartridge mapping
+
+and optionally (i.e. if booting a game)...
+- write $218a again to disable BIOS and write-protect other registers
+- write $218b to write-protect $218a
 
 The Super UFO uses the WinChipHead CH376 chip for USB communication and SD card
 functionality. (See the PDF datasheets in this directory for details)
+
 
 A point of interest:
 On boot, the 9.x UFO firmware reads and writes $2180-83, $2188, $218d and $218f
@@ -58,7 +67,6 @@ Controls which banks the UFO SRAM is mapped to.
 Each byte contains 2-bit logic states for 4 address lines, starting with A23
 as the top two bits of $2185. 
 Read from the byte at $0016 in the UFO header.
-(Warning: be careful to avoid bus conflicts if cartridge is enabled)
 
 W: bits 6-7 = UFO SRAM mapping (A23)
    bits 4-5 = UFO SRAM mapping (A22)
@@ -94,11 +102,18 @@ W: bit 6 (#$40) = DRAM is >8 Mbit
    (setting other bits in LoROM mode may invert DRAM address bits or do other
     weird stuff, so be careful)
 
-$2187 - memory control 4 (DRAM mapping)
-=======================================
-Controls which banks the UFO DRAM is mapped to. Works the same way as $2185.
-Read from the byte at $0014 in the UFO header.
+$2187 - memory control 4 (DRAM/cart mapping)
+============================================
+Controls which banks the UFO DRAM is mapped to when game mode is active, or
+which half of the cartridge is mapped in when firmware mode is active.
+Works like $2185 for DRAM. Read from the byte at $0014 in the UFO header.
 
+if firmware mode is enabled ($218a) and cartridge is enabled ($2189):
+W: bits 6-7 = cartridge mapping (A23)
+     0:     map cart banks $00-7d at $80-fd, open bus at $fe-ff
+     1/2/3: map cart banks $80-ff at $80-ff
+
+if game mode is enabled ($218a) and DRAM is enabled ($2189):
 W: bits 6-7 = UFO DRAM mapping (A23)
    bits 4-5 = UFO DRAM mapping (A22)
    bits 2-3 = UFO DRAM mapping (A21)
@@ -140,37 +155,36 @@ if it's enabled, or open bus otherwise.
 
 W: bits 0-1 = game select
 firmware mode:
-     0/2: enable DRAM only
-     1/3: enable cartridge only
+     0/2: enable DRAM only (DRAM always at banks $80+, mapping ignored)
+     1/3: enable cartridge only (map low or high half of cart, see $2187)
 firmware update mode:
-     0/2: enable DRAM only (always 32 Mbit, DRAM size registers ignored)
+     0/2: enable DRAM and SRAM (DRAM always 32 Mbit and at banks $80+)
      1:   enable SRAM only
-     3:   enable cartridge only (also map cartridge to banks $00-7d)
+     3:   enable SRAM and cartridge
 game mode:
-     0:   enable DRAM, SRAM, and cartridge
+     0:   enable DRAM, SRAM, and cartridge 
      1/2: enable SRAM only
-     3:   enable cartridge only
+     3:   enable SRAM and cartridge
 
 $218a - firmware enable
 =======================
 if mapper enabled ($218b):
 W: #$x0  = firmware mode
-           UFO  at banks $00-0f
-           SRAM at banks $10-7d
-           Game at banks $80-ff (DRAM writable)
-           Enable other registers
+           banks $00-0f: UFO firmware
+           banks $10-7d: SRAM
+           banks $80-ff: configurable by $2189
+           Enable other registers and write-enable DRAM
            (default power-on state)
            
-   #$xA  = firmware update mode
-           UFO  or cartridge at banks $00-0f (see $2189)
-           SRAM or cartridge at banks $10-7d
-           Game at banks $80-ff (DRAM writable?)
-           Disable other registers
+   #$xA  = firmware update mode(?)
+           banks $00-0f: ??? (possible bus conflicts w/ SRAM)
+           banks $10-ff: configurable by $2189 (except $7e-7f)
+           Disable other registers (and write-enable DRAM or not?)
            (set by firmware updater while reflashing)
            
    other = game mode
-           Game at banks $00-7d and $80-ff
-           Disable other registers
+           banks $00-ff: configurable by $2189 (except $7e-7f)
+           Disable other registers and write-protect DRAM
            (set when booting into DRAM or cartridge)
 
 $218b - mapper enable
@@ -188,7 +202,7 @@ R/W: unknown (antipiracy)
 
 $218e - CH376 command port
 ==========================
-R: bit 7 (#$80) = interrupt flag
+R: bit 7 (#$80) = interrupt flag (0: interrupt pending)
    bits 6-0 = same as data port bits 6-0
 W: USB/SD card command (see datasheets for details)
 
