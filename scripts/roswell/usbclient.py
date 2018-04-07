@@ -1,5 +1,8 @@
-
+from __future__ import print_function
 import usb.core, usb.util
+from struct import pack
+from usb.core import array, USBError
+import time
 
 SUPERUFO_VENDOR  = 0x1292
 SUPERUFO_PRODUCT = 0x4653
@@ -70,3 +73,26 @@ class USBClient(object):
 			size += self._usb_out.write(data[pos:pos+block_size], timeout)
 		return size
 		
+	def read_cart(self, addr, size):
+		assert(0 < size <= 0x10000)
+		self.write(b"\x08\x03" + pack("<I", addr) + pack("<H", size & 0xffff))
+		return self.read(size)
+	
+	def write_cart(self, addr, data):
+		assert(0 < len(data) <= 0x10000)
+		cmd = b"\x08\x05" + pack("<I", addr) + b"\x00\x00"
+		return self.write(cmd + data) - len(cmd)
+
+	def read_banks(self, bank0, bank1, addr0, addr1):
+		assert(bank0 <= bank1 and bank0 >= 0 and bank1 < 256)
+		if bank0 != bank1:
+			print("dump $%02x-%02x:%04x-%04x" % (bank0, bank1, addr0, addr1))
+		else:
+			print("dump $%02x:%04x-%04x" % (bank0, addr0, addr1))
+		start = time.clock()
+		data = array.array('B')
+		for i in range(bank0, bank1+1):
+			print("reading $%02x:%04x-%04x" % (i, addr0, addr1), end='\r')
+			data += self.read_cart(i<<16|addr0, addr1-addr0+1)
+		print("read back %u bytes in %.2f sec        " % (len(data), time.clock() - start))
+		return data
