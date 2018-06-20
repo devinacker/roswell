@@ -175,7 +175,8 @@ def mirror_rom(data, size):
 	# if not a power of 2, split into 2 unevenly-sized ROMs
 	firstsize = int(2**floor(log(len(data), 2)))
 	# pad the second ROM with the remainder of the first ROM
-	data += data[len(data) - firstsize:firstsize]
+	if firstsize < len(data):
+		data += data[len(data) - firstsize:firstsize]
 	# double up until we get to the desired size
 	while len(data) < size:
 		data *= 2
