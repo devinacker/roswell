@@ -1,5 +1,6 @@
 
 from __future__ import print_function
+from math import floor, ceil, log
 import struct
 
 valid_megabits = [4, 8, 10, 12, 16, 24, 32]
@@ -70,7 +71,9 @@ def get_header(data, megabits):
 	header_lo  = data[0x7fc0:0x7fe0]
 	header_hi  = data[0xffc0:0xffe0]
 	
-	header_ufo[0x0:0x2]  = struct.pack("<H", megabits)
+	header_ufo[0x0]  = megabits
+	# ROM size as closest power of two
+	header_ufo[0x11] = int(2**ceil(log(megabits, 2)))
 	header_ufo[0x8:0x10] = b"SFCUFOSD"
 	
 	score_lo = score_header(data, 0x7fc0)
@@ -99,7 +102,7 @@ def get_header(data, megabits):
 			rom_bits = b'\x55\x20'
 		else:
 			rom_bits = b'\x55\x00'
-			ram_bits = b'\x50\x3f'
+			ram_bits = b'\x60\x3f'
 		
 		header_ufo[32:] = header_lo
 		
@@ -134,26 +137,25 @@ def get_header(data, megabits):
 	header_ufo[0x17] = is_lorom
 	header_ufo[0x13:0x15] = rom_bits
 	
-	# SRAM (max 64kb / 1 Mbit)
+	# SRAM (max 128kb / 1 Mbit)
 	sram_size = header_ufo[0x38]
-	sram_byte = b'\x00'
-	if sram_size > 0 and sram_size <= 6:
-		# size in bytes
-		header_ufo[0x10:0x12] = struct.pack("<H", 1 << (sram_size + 10))
-		
+	sram_byte = 0
+	if sram_size > 0 and sram_size <= 7:
 		# other size & mapping info
 		if sram_size == 1:
-			sram_byte = b'\x01'
+			sram_byte = 1
 		elif sram_size <= 3:
-			sram_byte = b'\x02'
+			sram_byte = 2
 		elif sram_size <= 5:
-			sram_byte = b'\x03'
+			sram_byte = 3
 		else:
-			sram_byte = b'\x07'
-			if is_lorom:
-				ram_bits = b'\x60\x3f' if megabits > 16 else b'\x20\x3f'
-	header_ufo[0x12]      = sram_byte
-	header_ufo[0x15:0x17] = ram_bits
+			sram_byte = 7
+			if is_lorom and megabits <= 16:
+				# if megabits > 16 then ram_bits was already set appropriately
+				ram_bits = b'\x20\x3f'
+				
+		header_ufo[0x12]      = sram_byte
+		header_ufo[0x15:0x17] = ram_bits
 	
 	# region
 	region = header_ufo[0x39]
@@ -167,6 +169,17 @@ def get_header(data, megabits):
 	
 #	print(repr(header_ufo))
 	return bytes(header_ufo)
+
+# -----------------------------------------------------------------------------
+def mirror_rom(data, size):
+	# if not a power of 2, split into 2 unevenly-sized ROMs
+	firstsize = int(2**floor(log(len(data), 2)))
+	# pad the second ROM with the remainder of the first ROM
+	data += data[len(data) - firstsize:firstsize]
+	# double up until we get to the desired size
+	while len(data) < size:
+		data *= 2
+	return data[:size]
 
 # -----------------------------------------------------------------------------
 def format_rom(path):
@@ -187,13 +200,12 @@ def format_rom(path):
 		# remove copier header
 		data = data[0x200:]
 		
-	# pad ROM to appropriate size
-	# (TODO: actually mirror instead)
+	# mirror ROM to appropriate size
 	for size in valid_megabits:
 		bytesize = size * 0x20000
 		if (totalsize <= bytesize):
 			megabits = size
-			data = data.ljust(bytesize, b'\x00')
+			data = mirror_rom(data, bytesize)
 			totalsize = len(data)
 			break
 	

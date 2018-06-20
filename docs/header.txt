@@ -1,7 +1,7 @@
 Super UFO copier header format
 by Revenant
 
-last updated 2018/03/25
+last updated 2018/07/19
 
 0000 1 byte  ROM size in megabits (4, 8, 10, 12, 16, 24, 32)
 0001 1 byte  unused
@@ -9,13 +9,14 @@ last updated 2018/03/25
 0003 5 bytes unused
 0008 8 bytes "SFCUFOSD"
 
-0010 2 bytes SRAM size in bytes
+0010 1 byte  unused
+0011 1 byte  ROM size in megabits (rounded up to power of 2)
 0012 1 byte  SRAM present
 	00 = none
-	01 = 16kbit
-	02 = 64kbit
-	03 = 256kbit
-	07 = 1Mbit
+	01 = 16kbit (2kb)
+	02 = 64kbit (8kb)
+	03 = 256kbit (32kb)
+	07 = 1Mbit (128kb)
 	(written to bits 0-2 of $2184)
 
 0013 2 bytes ROM mapping
@@ -38,7 +39,7 @@ HiROM 4M = 09 00 (40-43:0000-ffff, c0-c3, c4-c7...)
 0015 1 byte  SRAM A15
 	00 = 0 (HiROM)  (xx:6000-7fff)
 	10 = don't care (xx:0000-ffff)
-	20 = 0 (LoROM)  (xx:0000-7fff) i.e. if more than 32kb SRAM
+	20 = 0 (LoROM)  (xx:0000-7fff) if more than 2MB ROM or 32kb SRAM
 	30 = 1          (xx:8000-ffff)
 	possibly ORed with either of...
 	40 = 24-32Mbit LoROM
@@ -52,8 +53,8 @@ HiROM 4M = 09 00 (40-43:0000-ffff, c0-c3, c4-c7...)
 	11b = 1
 	(written to $2185)
 	
-	default for LoROM : 7x, fx (x111xxxxb = 00111111b = 3f)
-	default for HiROM : 2x-3x, ax-bx (x01xxxxxb = 00101100b = 2c)
+	default for LoROM : 3f (7x, fx = x111xxxxb = 00111111b)
+	default for HiROM : 2c (2x-3x, ax-bx = x01xxxxxb = 00101100b)
 
 0017 1 byte  ROM mapping (same as 0002, written to $218f)
 0018 1 byte  region (00 = NTSC, 02 = PAL)
