@@ -74,14 +74,43 @@ proc Main
 	lda #$0a
 	sta To218x+7
 
+	; set up dummy values in remaining DRAM to test
+	; set LoROM, 32 Mbit DRAM, no SRAM
+	lda #$40
+	sta UFO_SRAM_SIZE
+	sta To218x+0
+	lda #$55
+	sta UFO_DRAM_SIZE
+	sta To218x+2
+	lda #$01
+	sta UFO_MAP_ROM
+	sta To218x+4
+	; firmware mode already set, enable DRAM only (ignores mapping)
+	stz UFO_MAP_SEL
+	stz To218x+5
+	
+	; populate test data
+	phb
+	RW_push set:i8
+	ldx #$81
+:
+	phx
+	plb
+	stx $8000
+	inx
+	bne :-
+	RW_pull
+	plb
+
 	jmp loop
 ;-------------------------------------------------------------------------------
 .segment "RAMCODE"
+
 	; Main loop
 loop:
 	jsr USBProcess
 
-.if 0
+.if 1
 :	bit $4212
 	bmi :-
 :	bit $4212
@@ -187,40 +216,29 @@ proc MemCtrlTest
 	sta z:To218x,x
 	sta $2184,x
 :
-.if 0
-	; write mapping registers
-	lda To218x+7
+
+	; set up map mode (temp)
+	lda z:To218x+7
 	sta $218b
-	ldx #0
-:	lda To218x,x
-	sta $2184,x
-	nop
-	nop
-	nop
-	nop
-	inx
-	cpx #7
-	bcc :-
-.endif
+	lda z:To218x+6
+	sta $218a
 
 	; populate test data
-	memcpy TestData+$00, $008000, 16
-	memcpy TestData+$10, $108000, 16
-	memcpy TestData+$20, $208000, 16
-	memcpy TestData+$30, $308000, 16
-	memcpy TestData+$40, $408000, 16
-	memcpy TestData+$50, $508000, 16
-	memcpy TestData+$60, $608000, 16
-	memcpy TestData+$70, $708000, 16
-	memcpy TestData+$80, $808000, 16
-	memcpy TestData+$90, $908000, 16
-	memcpy TestData+$a0, $a08000, 16
-	memcpy TestData+$b0, $b08000, 16
-	memcpy TestData+$c0, $c08000, 16
-	memcpy TestData+$d0, $d08000, 16
-	memcpy TestData+$e0, $e08000, 16
-	memcpy TestData+$f0, $f08000, 16
-		
+	phb
+	RW_push set:i8
+	ldx #$80
+:
+	phx
+	plb
+	lda a:$0000
+	sta f:TestData-128,x
+	lda a:$8000
+	sta f:TestData,x
+	inx
+	bne :-
+	RW_pull
+	plb
+
 	; display mapping registers
 	ldy #0
 	ldx #0
@@ -254,7 +272,10 @@ proc MemCtrlTest
 	inx
 	cpx #$0c
 	bcc :-
-	
+		
+	; restore memory
+	jsr UFOEnable
+		
 	; show cartridge test data
 	ldy #$80
 	ldx #0

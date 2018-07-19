@@ -1,7 +1,7 @@
 Super UFO hardware registers
 by Revenant
 
-last updated 2018/04/04
+last updated 2018/07/18
 
 The registers at $2184-218f are automatically enabled when turning on the SNES,
 but are disabled when launching a game, and are not enabled again if the reset
@@ -38,15 +38,13 @@ The equivalent routines are stored "in the clear" in the old 8.x firmware.
 $2184 - memory control 1 (UFO SRAM mapping, SRAM size, DRAM size)
 =================================================================
 Controls which region of a given bank the UFO SRAM is mapped to, and how much
-of it is exposed.
-Also controls the actual UFO DRAM address translation. (See also $2186)
+of it is exposed, as well as part of CPU->DRAM address translation.
 Read from the bytes at $0012 and $0015 in the UFO header.
 
-if game is HiROM:
-W: bit 7 (#$80) = DRAM is >16 Mbit
-
-if game is LoROM:
-W: bit 6 (#$40) = DRAM is >16 Mbit
+W: CPU->DRAM offset (A22)
+   bit 7: add 16Mbit if A15 = 0 (HiROM upper 32k if 32 Mbit)
+   bit 6: add 16Mbit if A22 = 1 (LoROM if >16 Mbit)
+   (see also $2186 below)
 
 if game uses SRAM:
 W: bits 4-5 = UFO SRAM mapping (A15:12)
@@ -78,29 +76,44 @@ W: bits 6-7 = UFO SRAM mapping (A23)
 
 $2186 - memory control 3 (DRAM size)
 ====================================
-Controls the actual UFO DRAM address translation. (See also bit 6 of $2184 and 
-bit 0 of $2188.) All applicable bits in all 3 registers must be set for DRAM 
-address decoding to work properly.
+Controls the actual UFO DRAM address translation. 
+Essentially, determines which area of DRAM to map to a given SNES CPU address/bank.
+The highest two bits of this value are in bits 6-7 of $2184, above. All applicable bits
+in both registers must be set for DRAM address decoding/mirroring to work properly.
 Read from the byte at $0013 in the UFO header.
 
-if game is HiROM:
-W: #$55 = DRAM is 32 Mbit
-   #$f5 = DRAM is 24 Mbit
-   #$95 = DRAM is 16 Mbit
-   #$3d = DRAM is 12 Mbit
-   #$37 = DRAM is 10 Mbit
-   #$25 = DRAM is 8 Mbit
-   #$09 = DRAM is 4 Mbit
-   (these are the values used by the firmware when setting HiROM size. Other
-    configurations may or may not work as intended...)
+W: CPU->DRAM offset (A21:18)
+   bit 7: add 8Mbit if A15 = 0 (HiROM upper 32k)
+   bit 6: add 8Mbit if A21 = 1
+   bit 5: add 4Mbit if A15 = 0 (HiROM upper 32k)
+   bit 4: add 4Mbit if A20 = 1
+   bit 3: add 2Mbit if A15 = 0 (HiROM upper 32k)
+   bit 2: add 2Mbit if A19 = 1
+   bit 1: add 1Mbit if A15 = 0 (HiROM upper 32k)
+   bit 0: add 1Mbit if A18 = 1
+   (see also bits 6-7 of $2184 above)
 
-if game is LoROM:
-W: bit 6 (#$40) = DRAM is >8 Mbit
-   bit 4 (#$10) = DRAM is >4 Mbit
-   bit 2 (#$04) = DRAM is >2 Mbit
-   bit 0 (#$01) = DRAM is >1 Mbit
-   (setting other bits in LoROM mode may invert DRAM address bits or do other
-    weird stuff, so be careful)
+Essentially, the six highest address lines on the UFO DRAM are driven by
+the output of a 5-bit adder, where the two inputs are
+  - bits 0/2/4/6 of $2186 and bit 6 of $2184, AND the respective bit in A22:18
+  - bits 1/3/5/7 of $2186 and bit 7 of $2184, AND the inverse of A15
+  
+The remaining DRAM address bits are driven by A17:16 and A14:0, so these settings
+effect every 32kb DRAM region within four consecutive banks (e.g. banks 80-83).
+
+In practice, the following combinations are used by the UFO firmware:
+
+Size    LoROM   HiROM
+4Mbit   $05     $09
+8Mbit   $15     $25
+10Mbit  $55     $37
+12Mbit  $55     $3d
+16Mbit  $55     $95
+24Mbit  $55*    $f5
+32Mbit  $55*    $55**
+
+*  also set bit 6 of $2184
+** also set bit 7 of $2184
 
 $2187 - memory control 4 (DRAM/cart mapping)
 ============================================
@@ -110,8 +123,8 @@ Works like $2185 for DRAM. Read from the byte at $0014 in the UFO header.
 
 if firmware mode is enabled ($218a) and cartridge is enabled ($2189):
 W: bits 6-7 = cartridge mapping (A23)
-     0:     map cart banks $00-7d at $80-fd, open bus at $fe-ff
-     1/2/3: map cart banks $80-ff at $80-ff
+     0:     cart A23 = 0 (cart banks $00-7d at $80-fd, open bus at $fe-ff)
+     1/2/3: cart A23 = 1 (cart banks $80-ff at $80-ff)
 
 if game mode is enabled ($218a) and DRAM is enabled ($2189):
 W: bits 6-7 = UFO DRAM mapping (A23)
@@ -141,7 +154,9 @@ R: bit 0 (#$01) = no SD card
    bits 4-7 = open bus
 
 any time:
-W: bit 0 (#$01) = DRAM mapping mode (0: HiROM, 1: LoROM)
+W: bit 0 (#$01) = UFO DRAM mapping (A15)
+     0: don't care (HiROM)
+     1: 1 (LoROM)
 
 $2189 - game select
 ===================
