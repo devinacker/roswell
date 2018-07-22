@@ -185,15 +185,15 @@ $218a - firmware enable
 =======================
 if mapper enabled ($218b):
 W: #$x0  = firmware mode
-           banks $00-0f: UFO firmware
-           banks $10-7d: SRAM
+           banks $00-07: UFO firmware
+           banks $08-7d: SRAM
            banks $80-ff: configurable by $2189
            Enable other registers and write-enable DRAM
            (default power-on state)
            
    #$xA  = firmware update mode(?)
-           banks $00-0f: ??? (possible bus conflicts w/ SRAM)
-           banks $10-ff: configurable by $2189 (except $7e-7f)
+           banks $00-07: UFO firmware
+           banks $08-ff: configurable by $2189 (except $7e-7f)
            Disable other registers (and write-enable DRAM or not?)
            (set by firmware updater while reflashing)
            
