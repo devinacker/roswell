@@ -95,13 +95,13 @@ proc USBInit
 	bcs err
 	
 ok:
-	WAIT_vbl
-	CGRAM_setcolor_rgb 0, 0,20,0
+;	WAIT_vbl
+;	CGRAM_setcolor_rgb 0, 0,20,0
 	clc
 	rts
 err:
-	WAIT_vbl
-	CGRAM_setcolor_rgb 0, 20,0,0
+;	WAIT_vbl
+;	CGRAM_setcolor_rgb 0, 20,0,0
 	sec
 	rts
 endproc
@@ -166,9 +166,10 @@ proc USBProcess
 	stz USBConnect
 	sec
 	rts
+:
 .endif
 
-:	lda USB_STATUS
+	lda USB_STATUS
 	and #USB_STATUS_CONNECTED
 	beq :+
 	; cable connection present

@@ -2,6 +2,7 @@
 
 .include "usb.i"
 .include "memctl.i"
+.include "cartinfo.i"
 
 ;-------------------------------------------------------------------------------
 .segment "ZEROPAGE"
@@ -22,7 +23,7 @@ incbin	FontTiles, "data/font.png.tiles.lz4"
 incbin	FontPalette, "data/font.png.palette"
 
 InfoText:
-.byte 2, 2, "Roswell USB host v0.0"
+.asciiz "Roswell USB host v0.1"
 
 ;-------------------------------------------------------------------------------
 .segment "CODE"
@@ -68,13 +69,9 @@ proc Main
 
 	jsr UFOEnable
 
-	break
-	jsr USBInit
-
 	lda #$0a
 	sta To218x+7
 
-	; set up dummy values in remaining DRAM to test
 	; set LoROM, 32 Mbit DRAM, no SRAM
 	lda #$40
 	sta UFO_SRAM_SIZE
@@ -89,35 +86,104 @@ proc Main
 	stz UFO_MAP_SEL
 	stz To218x+5
 	
-	; populate test data
-	phb
-	RW_push set:i8
-	ldx #$81
-:
-	phx
-	plb
-	stx $8000
-	inx
-	bne :-
-	RW_pull
-	plb
-
-	jmp loop
+	jmp entry
 ;-------------------------------------------------------------------------------
 .segment "RAMCODE"
 
+entry:
+	break
+	jsr GetCartInfo
+	jsr USBInit
+
+	; show info line
+	ldy #$40
+	ldx #.loword(InfoText)
+	jsr PrintString
+	; show copier ROM name
+	ldy #$80
+	ldx #.loword(UnitTitle)
+	jsr PrintString
+	
+	; show cart title and mapping
+	ldy #$140
+	ldx #.loword(CartTitle)
+	jsr PrintString
+	
+	; if any ROM actually exists:
+	lda ROMNumBanks
+	beq PrintRAM
+	
+PrintROM:
+	; "ROM: "
+	ldy #$180
+	lda #$52 ;'RO'
+	sta Tilemap,y
+	iny
+	iny
+	lda #$4F ;'RO'
+	sta Tilemap,y
+	iny
+	iny
+	lda #$4D ;':'
+	sta Tilemap,y
+	iny
+	iny
+	lda #$3A ;':'
+	sta Tilemap,y
+	iny
+	iny
+	lda #$20 ;' '
+	sta Tilemap,y
+	iny
+	iny
+
+	lda #$24 ;'$'
+	sta Tilemap,y
+	iny
+	iny
+	lda ROMStartBank
+	jsr PrintByte
+	lda #$2D ;'-'
+	sta Tilemap,y
+	iny
+	iny
+	lda ROMNumBanks
+	clc
+	adc ROMStartBank
+	dec
+	jsr PrintByte
+	lda #$3A ;':'
+	sta Tilemap,y
+	iny
+	iny
+	lda ROMStartPage
+	jsr PrintByte
+	lda #$00
+	jsr PrintByte
+	lda #$2D ;'-'
+	sta Tilemap,y
+	iny
+	iny
+	lda ROMNumPages
+	clc
+	adc ROMStartPage
+	dec
+	jsr PrintByte
+	lda #$FF
+	jsr PrintByte
+
+PrintRAM:
+	; TODO
+
 	; Main loop
 loop:
-	jsr USBProcess
 
-.if 1
 :	bit $4212
 	bmi :-
 :	bit $4212
 	bpl :-
 	; in vblank - update tilemap
 	jsr VBL
-.endif 
 
 	; end
 	bra loop
@@ -127,6 +193,7 @@ endproc
 proc VBL
 	VRAM_memcpy VRAM_TILEMAP, Tilemap, 32*32*2
 	jsr GetJoy
+	jsr USBProcess
 	jsr MemCtrlTest
 	
 	rts
@@ -152,7 +219,7 @@ endproc
 
 ;-------------------------------------------------------------------------------
 proc MemCtrlTest
-
+.ifdef MEM_CTL_TEST
 	; use joypad to update vals
 	ldx #0
 	
@@ -224,20 +291,22 @@ proc MemCtrlTest
 	sta $218a
 
 	; populate test data
-	phb
-	RW_push set:i8
-	ldx #$80
-:
-	phx
-	plb
-	lda a:$0000
-	sta f:TestData-128,x
-	lda a:$8000
-	sta f:TestData,x
-	inx
-	bne :-
-	RW_pull
-	plb
+	memcpy TestData+$00, $008000, 16
+	memcpy TestData+$10, $018000, 16
+	memcpy TestData+$20, $028000, 16
+	memcpy TestData+$30, $038000, 16
+	memcpy TestData+$40, $048000, 16
+	memcpy TestData+$50, $058000, 16
+	memcpy TestData+$60, $068000, 16
+	memcpy TestData+$70, $078000, 16
+	memcpy TestData+$80, $088000, 16
+	memcpy TestData+$90, $098000, 16
+	memcpy TestData+$a0, $0a8000, 16
+	memcpy TestData+$b0, $0b8000, 16
+	memcpy TestData+$c0, $0c8000, 16
+	memcpy TestData+$d0, $0d8000, 16
+	memcpy TestData+$e0, $0e8000, 16
+	memcpy TestData+$f0, $0f8000, 16
 
 	; display mapping registers
 	ldy #0
@@ -284,8 +353,20 @@ proc MemCtrlTest
 	inx
 	cpx #16*16
 	bcc :-
-
+.endif ; MEM_CTL_TEST
 	rts
+endproc
+
+;-------------------------------------------------------------------------------
+proc PrintString
+:	lda a:0,x
+	beq :+
+	sta Tilemap,y
+	inx
+	iny
+	iny
+	bra :-
+:	rts
 endproc
 
 ;-------------------------------------------------------------------------------
