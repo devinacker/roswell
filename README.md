@@ -19,4 +19,4 @@ Documentation so far:
 * `usb_client.txt` - command protocol for the SNES-side server
 * `ch37*ds1.pdf` - USB chip datasheets
 
-[PyUSB](https://github.com/pyusb/pyusb) is required for any included tools that involve USB.
+[PyUSB](https://github.com/pyusb/pyusb) is required for any included tools that involve USB. On Windows you'll also need to use [Zadig](https://zadig.akeo.ie) to install WinUSB compatibility for the existing  Super UFO Pro USB driver.

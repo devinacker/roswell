@@ -26,7 +26,7 @@ CheckPageMax: .res 1
 ;-------------------------------------------------------------------------------
 .segment "LORAM"
 
-UnitTitle: .res 22
+UnitTitle: .res 30
 CartTitle: .res 22
 
 ;-------------------------------------------------------------------------------
@@ -40,8 +40,8 @@ proc GetCartInfo
 	stz z:MapperType
 
 	; get title of current copier unit
-	memcpy UnitTitle, $00ffc0, 21
-	stz UnitTitle+21
+	memcpy UnitTitle, $008004, 29
+	stz UnitTitle+29
 	
 	; map in cartridge
 	jsr DRAMDisable
@@ -229,8 +229,6 @@ PageIsOpenBus:
 	sta ZPAD+2
 	stx ZPAD+3
 	sta ZPAD+5
-	lda #$80
-	tsb ZPAD+3
 proc _PageIsOpenBus
 	ldy #$7f
 :	lda [ZPAD],y

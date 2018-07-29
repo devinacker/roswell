@@ -23,7 +23,7 @@ incbin	FontTiles, "data/font.png.tiles.lz4"
 incbin	FontPalette, "data/font.png.palette"
 
 InfoText:
-.asciiz "Roswell USB host v0.1"
+.asciiz "Roswell USB server v0.1"
 
 ;-------------------------------------------------------------------------------
 .segment "CODE"
@@ -116,15 +116,15 @@ entry:
 PrintROM:
 	; "ROM: "
 	ldy #$180
-	lda #$52 ;'RO'
+	lda #$52 ;'R'
 	sta Tilemap,y
 	iny
 	iny
-	lda #$4F ;'RO'
+	lda #$4F ;'O'
 	sta Tilemap,y
 	iny
 	iny
-	lda #$4D ;':'
+	lda #$4D ;'M'
 	sta Tilemap,y
 	iny
 	iny
@@ -193,7 +193,8 @@ endproc
 proc VBL
 	VRAM_memcpy VRAM_TILEMAP, Tilemap, 32*32*2
 	jsr GetJoy
-	jsr USBProcess
+:	jsr USBProcess
+	bcc :- ; test
 	jsr MemCtrlTest
 	
 	rts

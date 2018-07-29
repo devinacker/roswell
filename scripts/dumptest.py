@@ -16,7 +16,7 @@ if title == "":
 c.write_cart(0x2220, b"\x00\x01\x02\x03")
 
 # dump $8000-ffff in banks $00-07
-data = c.read_banks(0x00, 0x07, 0x8000, 0xffff)
+data = c.read_banks(0x00, 0x3f, 0x8000, 0xffff)
 with open("%s.sfc" % title, 'wb') as f:
 	data.tofile(f)
 	print("wrote %s.sfc successfully" % title)
