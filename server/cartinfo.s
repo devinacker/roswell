@@ -177,6 +177,14 @@ proc CheckBankRange
 	lsr z:CheckBankMax
 	bne @start ; if there are still any banks to check
 	
+	; if we got here we ran out of additional banks to check
+	; see if the first/only one is open bus or not...
+	ldx ZPAD+8
+	lda z:CheckBankMax
+	jsr PageIsOpenBus
+	bcs @end
+	inc z:CheckBankMax
+	
 @end:
 	; TODO: work upwards if current banks don't match
 	; (only needed for oddly sized ROMs)

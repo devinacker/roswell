@@ -429,15 +429,21 @@ proc ReadBulkStart
 	
 	; there's more
 	; set busy flag
+	xba
 	lda #USB_STATUS_BUSY
 	tsb USBReadBusy
 	ldx #ReadBulkCont
 	stx USBRead
+	xba
 	
 :	sec
 	sbc USBCmdSize
 	beq end
 
+	xba
+	lda #0
+	xba
+	tax
 	; start copy
 	jsr DoRead
 end:	
@@ -451,7 +457,10 @@ proc ReadBulkCont
 	sta USBCommand
 	nop
 	
-	ldx USB_DATA
+	lda #0
+	xba
+	lda USB_DATA
+	tax
 	cpx #USB_BUF_SIZE
 	beq cont
 
