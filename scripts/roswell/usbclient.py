@@ -86,9 +86,11 @@ class USBClient(object):
 	def read_banks(self, bank0, bank1, addr0, addr1):
 		assert(bank0 <= bank1 and bank0 >= 0 and bank1 < 256)
 		if bank0 != bank1:
-			print("dump $%02x-%02x:%04x-%04x" % (bank0, bank1, addr0, addr1))
+			#print("dump $%02x-%02x:%04x-%04x" % (bank0, bank1, addr0, addr1))
+			pass
 		else:
-			print("dump $%02x:%04x-%04x" % (bank0, addr0, addr1))
+			#print("dump $%02x:%04x-%04x" % (bank0, addr0, addr1))
+			pass
 		start = time.clock()
 		data = array.array('B')
 		for i in range(bank0, bank1+1):

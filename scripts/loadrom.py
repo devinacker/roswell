@@ -7,12 +7,11 @@ import sys
 import time
 
 # -----------------------------------------------------------------------------
-def write_rom(path):
+def write_rom(path, client = usbclient.USBClient()):
 
 	data, header = romutils.format_rom(path)
 	totalsize = len(data)
 
-	client = usbclient.USBClient()
 	start = time.clock()
 
 	# begin with empty string
