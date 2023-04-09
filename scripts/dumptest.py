@@ -7,7 +7,7 @@ c = usbclient.USBClient()
 
 c.open()
 print("opened USB device successfully")
-title = c.read_cart(0xffc0, 21).tostring().strip()
+title = c.read_cart(0xffc0, 21).tobytes().decode('ascii', 'replace').strip()
 print("cartridge title:", title)
 if title == "":
 	title = "unnamed"

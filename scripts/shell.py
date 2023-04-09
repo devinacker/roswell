@@ -101,7 +101,7 @@ def read(addrs):
 	bank0, bank1, addr0, addr1 = parse_addr(addrs)
 	nbanks   = 1 + bank1 - bank0
 	banksize = 1 + addr1 - addr0
-	data = memoryview(client.read_banks(bank0, bank1, addr0, addr1).tostring())
+	data = memoryview(client.read_banks(bank0, bank1, addr0, addr1).tobytes())
 
 	for bank in range(0, nbanks):
 		bankdata = data[(banksize*bank):(banksize*(bank+1))]
@@ -109,8 +109,8 @@ def read(addrs):
 			ss = bankdata[addr:addr+16]
 			print("%02X:%04X | " % (bank0+bank, addr0+addr), end='')
 			for char in ss:
-				print("%02X " % ord(char), end='')
-			print(" | ", re.sub(r'[\x00-\x1f]', '.', ss.tobytes()))
+				print("%02X " % char, end='')
+			print(" | ", re.sub(r'[\x00-\x1f]', '.', ss.tobytes().decode('ascii', 'replace')))
 
 @cmd 
 def write(addr, *data):
@@ -170,10 +170,10 @@ def quit():
 if __name__ == "__main__":
 	print("Roswell interactive shell\nType 'help' for commands")
 	while True:
-		input = raw_input("\n>").split()
-		if len(input) > 0:
+		inputs = input("\n>").split()
+		if len(inputs) > 0:
 			try:
-				find_cmd(input[0])(*input[1:])
+				find_cmd(inputs[0])(*inputs[1:])
 			except Exception as e:
 				print(e)
 			except KeyboardInterrupt:
