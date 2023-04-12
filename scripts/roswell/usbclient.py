@@ -91,10 +91,10 @@ class USBClient(object):
 		else:
 			#print("dump $%02x:%04x-%04x" % (bank0, addr0, addr1))
 			pass
-		start = time.clock()
+		start = time.perf_counter()
 		data = array.array('B')
 		for i in range(bank0, bank1+1):
 			print("reading $%02x:%04x-%04x" % (i, addr0, addr1), end='\r')
 			data += self.read_cart(i<<16|addr0, addr1-addr0+1)
-		print("read back %u bytes in %.2f sec        " % (len(data), time.clock() - start))
+		print("read back %u bytes in %.2f sec        " % (len(data), time.perf_counter() - start))
 		return data

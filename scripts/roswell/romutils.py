@@ -37,14 +37,15 @@ def score_header(data, offset):
 		# least likely opcodes
 		(-8, [0x00, 0x02, 0xdb, 0x42, 0xff]),
 	]
-	reset_op = struct.unpack("B", data[(offset & ~0x7fff) | (reset_vector & 0x7fff)])[0]
+	reset_vector = (offset & ~0x7fff) | (reset_vector & 0x7fff)
+	reset_op = struct.unpack("B", data[reset_vector:reset_vector+1])[0]
 	for opcodes in reset_opcodes:
 		if reset_op in opcodes[1]:
 			score += opcodes[0]
 			break
 
 	# check detected mapper (clear out ROM speed bit)
-	mapper = ~0x10 & struct.unpack("B", header[0x15])[0]
+	mapper = ~0x10 & struct.unpack("B", header[0x15:0x16])[0]
 	if offset == 0x7fc0 and mapper == 0x20:
 		score += 2 # LoROM
 	elif offset == 0xffc0 and mapper == 0x21:
@@ -54,13 +55,13 @@ def score_header(data, offset):
 	if header[0x1a] == b'\x33':
 		score += 2
 	# ROM size / RAM size / chipset / region
-	if struct.unpack("B", header[0x16])[0] < 0x08:
+	if struct.unpack("B", header[0x16:0x17])[0] < 0x08:
 		score += 1
-	if struct.unpack("B", header[0x17])[0] < 0x10:
+	if struct.unpack("B", header[0x17:0x18])[0] < 0x10:
 		score += 1
-	if struct.unpack("B", header[0x18])[0] < 0x08:
+	if struct.unpack("B", header[0x18:0x19])[0] < 0x08:
 		score += 1
-	if struct.unpack("B", header[0x19])[0] < 14:
+	if struct.unpack("B", header[0x19:0x1A])[0] < 14:
 		score += 1
 	
 	return score

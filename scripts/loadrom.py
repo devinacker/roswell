@@ -12,7 +12,7 @@ def write_rom(path, client = usbclient.USBClient()):
 	data, header = romutils.format_rom(path)
 	totalsize = len(data)
 
-	start = time.clock()
+	start = time.perf_counter()
 
 	# begin with empty string
 	print("starting transfer...")
@@ -31,7 +31,7 @@ def write_rom(path, client = usbclient.USBClient()):
 	# end with another empty string
 	client.write("")
 	print("written %u bytes" % cursize)
-	print("finished writing successfully in %.2f sec" % (time.clock() - start))
+	print("finished writing successfully in %.2f sec" % (time.perf_counter() - start))
 
 
 # -----------------------------------------------------------------------------
