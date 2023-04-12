@@ -7,6 +7,9 @@ Currently available:
 * `loadrom.py` - send ROM to unit over USB (will add valid header as necessary)
 * `clienttest.py` - test script: retrieve and show region of cart memory (also test r/w speed)
 * `dumptest.py` - test script: dump ROM and SRAM images from a cart
+* `np_dir.py` - show directory of SF Memory (Nintendo Power)
+* `np_dump.py` - dump individual ROM and SRAM images from SF Memory (Nintendo Power)
+* `np_dump_all.py` - dump whole Flash and SRAM images from SF Memory (Nintendo Power)
 
 The `loadrom` script is to be used with the USB transfer option on the Super UFO main menu. Other scripts communicate with the server program after it's running on the console.
 
