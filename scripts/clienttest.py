@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
 import roswell.usbclient as usbclient
 from usb.core import array, USBError
 from struct import pack

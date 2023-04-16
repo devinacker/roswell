@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
 import roswell.usbclient as usbclient
+import sys
 
 def write_byte(addr, value):
 	c.write_cart(addr, value.to_bytes(1, 'little'))
@@ -47,7 +47,7 @@ if tmp == 0x7D:
 	wakeup()
 elif tmp != 0x2A:
 	print("SF memory is not detected")
-	exit
+	sys.exit()
 
 print("SF memory is detected")
 

@@ -5,6 +5,7 @@ This is a project to create some useful documentation and tools for curious owne
 
 Currently available:
 * `loadrom.py` - send ROM to unit over USB (will add valid header as necessary)
+* `shell.py` - interactive command shell for inspecting, dumping, and modifying memory contents
 * `clienttest.py` - test script: retrieve and show region of cart memory (also test r/w speed)
 * `dumptest.py` - test script: dump ROM and SRAM images from a cart
 * `np_dir.py` - show directory of SF Memory (Nintendo Power)
